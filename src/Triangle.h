@@ -13,9 +13,8 @@ using namespace std;
 
 template<class T>
 class Triangle : public Shape2D<T> {
-public:
-
-    inline virtual ShapeResultData<T> compute();
+  public:
+    inline virtual ShapeResult<T> compute();
 
     inline string print();
 
@@ -23,22 +22,21 @@ public:
 };
 
 template<class T>
-inline ShapeResultData<T> Triangle<T>::compute() {
+inline ShapeResult<T> Triangle<T>::compute() {
+    ShapeResult<T> result;
 
-    ShapeResultData<T> result;
+  T base = this->m_param.get_attrib(PARAM_WIDTH);
+  T height = this->m_param.get_attrib(PARAM_HEIGHT);
 
-    T base = this->m_param.get(PARAM_WIDTH);
-    T height = this->m_param.get(PARAM_HEIGHT);
+  if (base <= 0 || height <= 0) {
+      return result;
+  }
 
-    if (base <= 0 || height <= 0) {
-        return result;
-    }
+  T area = (base * height) / (T)2;
 
-    T area = (base * height) / (T)2;
+  result.set_attrib(ShapeResultIndex::RESULT_AREA, area);
 
-    result.set(ShapeResultIndex::RESULT_AREA, area);
-
-    return result;
+  return result;
 }
 
 template<class T>
