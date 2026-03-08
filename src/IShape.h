@@ -15,7 +15,7 @@ class IShape {
     virtual string print() = 0;
 
 
-  private:
+  protected:
     ShapeParam<T> m_param;
 
 

@@ -25,10 +25,14 @@ class ShapeParam {
 };
 template<class T>
 inline T ShapeParam<T>::get(ShapeParamIndex ind) const {
+    if(ind<attribs.size()) return attribs[ind];
+    return 0;
 }
 
 template<class T>
 inline bool ShapeParam<T>::set(ShapeParamIndex ind, const T & val) {
+  if(ind>=attribs.size())attribs.resize(ind+1);
+  attribs[ind]=val;
   return true;
 }
 
