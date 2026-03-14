@@ -2,6 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include "ShapeFactory.h"
+#include <stdexcept>
 
 TEST(test_shape1, AddFunction)
 {
@@ -127,7 +128,6 @@ TYPED_TEST(TorusTypedTest, InvalidTorusGeometry)
 
     ASSERT_THROW(torus.compute(), std::invalid_argument);
 }
-
 
 TEST(test_torus, PrintContainsValues)
 {

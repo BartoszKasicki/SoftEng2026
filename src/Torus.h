@@ -5,6 +5,7 @@
 #include "ShapeResultData.h"
 #include <string>
 #include <cmath>
+#include <stdexcept>
 // #include <numbers> // (C++20)
 using namespace std;
 #include "ShapeParam.h"
