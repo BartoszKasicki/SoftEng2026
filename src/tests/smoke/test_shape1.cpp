@@ -1,4 +1,3 @@
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <gtest/gtest.h>
@@ -28,6 +27,45 @@ TEST(test_shape1, AddFunction)
 
     shape.reset(nullptr);
     ASSERT_EQ(shape.get(), nullptr);
+}
+
+TEST(test_torus, Compute)
+{
+    ShapeParam<double> param;
+
+    param.set_attrib(PARAM_RADIUS, 5.0);
+    param.set_attrib(PARAM_RADIUS_2, 2.0);
+
+    Torus<double> torus(param);
+
+    ShapeResult<double> result = torus.compute();
+
+    double volume = result.get_attrib(RESULT_VOLUME);
+    double surface = result.get_attrib(RESULT_SURFACE);
+
+    const double PI = M_PI;
+
+    double expected_volume = 2 * PI * PI * 5.0 * 2.0 * 2.0;
+    double expected_surface = 4 * PI * PI * 5.0 * 2.0;
+
+    ASSERT_NEAR(volume, expected_volume, 1e-6);
+    ASSERT_NEAR(surface, expected_surface, 1e-6);
+}
+
+TEST(test_torus, PrintContainsValues)
+{
+    ShapeParam<double> param;
+
+    param.set_attrib(PARAM_RADIUS, 5.0);
+    param.set_attrib(PARAM_RADIUS_2, 2.0);
+
+    Torus<double> torus(param);
+
+    std::string text = torus.print();
+
+    ASSERT_NE(text.find("Torus"), std::string::npos);
+    ASSERT_NE(text.find("5"), std::string::npos);
+    ASSERT_NE(text.find("2"), std::string::npos);
 }
 
 
