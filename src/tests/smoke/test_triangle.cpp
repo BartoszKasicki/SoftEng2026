@@ -2,86 +2,98 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include "ShapeFactory.h"
+#include <stdexcept>
 
-int main(int argc, char** argv)
+using TriangleTypes = ::testing::Types<float, double, long double>;
+
+template <typename T> class TriangleTypedTest : public ::testing::Test {};
+
+TYPED_TEST_SUITE(TriangleTypedTest, TriangleTypes);
+
+TYPED_TEST(TriangleTypedTest, ComputeCorrectValues)
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, static_cast<TypeParam>(3));
+    param.set_attrib(PARAM_SIDE_B, static_cast<TypeParam>(4));
+    param.set_attrib(PARAM_SIDE_C, static_cast<TypeParam>(5));
+
+    Triangle<TypeParam> tri(param);
+
+    ShapeResult<TypeParam> result = tri.compute();
+
+    TypeParam perimeter = result.get_attrib(ShapeResultIndex::RESULT_PERIMETER);
+    TypeParam area = result.get_attrib(ShapeResultIndex::RESULT_AREA);
+
+    ASSERT_NEAR(static_cast<double>(perimeter), 12.0, 1e-6);
+    ASSERT_NEAR(static_cast<double>(area), 6.0, 1e-6);
 }
 
-TEST(test_triangle, ValidTriangle)
+TYPED_TEST(TriangleTypedTest, ZeroSideThrows)
 {
-    bool res = true;
-    ShapeParam<float> param;
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, static_cast<TypeParam>(0));
+    param.set_attrib(PARAM_SIDE_B, static_cast<TypeParam>(4));
+    param.set_attrib(PARAM_SIDE_C, static_cast<TypeParam>(5));
 
-    // ustawiamy boki trójkąta 3-4-5
-    res = param.set_attrib(ShapeParamIndex::PARAM_WIDTH, 3.f);
-    ASSERT_NE(res, false);
+    Triangle<TypeParam> tri(param);
 
-    res = param.set_attrib(ShapeParamIndex::PARAM_HEIGHT, 4.f);
-    ASSERT_NE(res, false);
-
-    res = param.set_attrib(ShapeParamIndex::PARAM_DEPTH, 5.f);
-    ASSERT_NE(res, false);
-
-    param.type = ShapeType::PT_TRIANGLE;
-
-    res = param.validate();
-    ASSERT_NE(res, false);
-
-    auto shape =
-        std::unique_ptr<IShape<float>>(ShapeFactory<float>::create(param));
-
-    ASSERT_NE(shape, nullptr);
-
-    auto data = shape->compute();
-
-    float area = data.get_attrib(ShapeResultIndex::RESULT_AREA);
-    float perimeter = data.get_attrib(ShapeResultIndex::RESULT_PERIMETER);
-
-    ASSERT_NEAR(area, 6.0f, 0.01f);
-    ASSERT_NEAR(perimeter, 12.0f, 0.01f);
+    ASSERT_THROW(tri.compute(), std::invalid_argument);
 }
 
-TEST(test_triangle, InvalidTriangle)
+TYPED_TEST(TriangleTypedTest, NegativeSideThrows)
 {
-    ShapeParam<float> param;
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, static_cast<TypeParam>(-3));
+    param.set_attrib(PARAM_SIDE_B, static_cast<TypeParam>(4));
+    param.set_attrib(PARAM_SIDE_C, static_cast<TypeParam>(5));
 
-    // NIE spełnia nierówności trójkąta
-    param.set_attrib(ShapeParamIndex::PARAM_WIDTH, 1.f);
-    param.set_attrib(ShapeParamIndex::PARAM_HEIGHT, 2.f);
-    param.set_attrib(ShapeParamIndex::PARAM_DEPTH, 10.f);
+    Triangle<TypeParam> tri(param);
 
-    param.type = ShapeType::PT_TRIANGLE;
-
-    auto shape =
-        std::unique_ptr<IShape<float>>(ShapeFactory<float>::create(param));
-
-    ASSERT_NE(shape, nullptr);
-
-    auto data = shape->compute();
-
-    float area = data.get_attrib(ShapeResultIndex::RESULT_AREA);
-
-    ASSERT_EQ(area, 0.f);
+    ASSERT_THROW(tri.compute(), std::invalid_argument);
 }
 
-TEST(test_triangle, ZeroValue)
+TYPED_TEST(TriangleTypedTest, InvalidTriangleThrows)
 {
-    ShapeParam<float> param;
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, static_cast<TypeParam>(1));
+    param.set_attrib(PARAM_SIDE_B, static_cast<TypeParam>(2));
+    param.set_attrib(PARAM_SIDE_C, static_cast<TypeParam>(5));
 
-    param.set_attrib(ShapeParamIndex::PARAM_WIDTH, 0.f);
-    param.set_attrib(ShapeParamIndex::PARAM_HEIGHT, 4.f);
-    param.set_attrib(ShapeParamIndex::PARAM_DEPTH, 5.f);
+    Triangle<TypeParam> tri(param);
 
-    param.type = ShapeType::PT_TRIANGLE;
+    ASSERT_THROW(tri.compute(), std::invalid_argument);
+}
 
-    auto shape =
-        std::unique_ptr<IShape<float>>(ShapeFactory<float>::create(param));
+TYPED_TEST(TriangleTypedTest, LargeValuesOverflow)
+{
+    TypeParam max_val = std::numeric_limits<TypeParam>::max() / 3;
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, max_val);
+    param.set_attrib(PARAM_SIDE_B, max_val);
+    param.set_attrib(PARAM_SIDE_C, max_val);
 
-    auto data = shape->compute();
+    Triangle<TypeParam> tri(param);
 
-    float area = data.get_attrib(ShapeResultIndex::RESULT_AREA);
+    ShapeResult<TypeParam> result = tri.compute();
 
-    ASSERT_EQ(area, 0.f);
+    ASSERT_NE(result.get_attrib(ShapeResultIndex::RESULT_AREA), 0);
+    ASSERT_EQ(result.get_attrib(ShapeResultIndex::RESULT_PERIMETER),
+              max_val * 3);
+}
+
+TYPED_TEST(TriangleTypedTest, PrintContainsValues)
+{
+    ShapeParam<TypeParam> param;
+    param.set_attrib(PARAM_SIDE_A, static_cast<TypeParam>(3));
+    param.set_attrib(PARAM_SIDE_B, static_cast<TypeParam>(4));
+    param.set_attrib(PARAM_SIDE_C, static_cast<TypeParam>(5));
+
+    Triangle<TypeParam> tri(param);
+
+    std::string text = tri.print();
+
+    ASSERT_NE(text.find("Triangle"), std::string::npos);
+    ASSERT_NE(text.find("3"), std::string::npos);
+    ASSERT_NE(text.find("4"), std::string::npos);
+    ASSERT_NE(text.find("5"), std::string::npos);
 }
