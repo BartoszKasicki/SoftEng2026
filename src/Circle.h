@@ -7,11 +7,12 @@
 
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 template <class T> class Circle : public Shape2D<T> {
 public:
-    inline ShapeResult<T> compute();
-    inline std::string print();
+    inline virtual ShapeResult<T> compute();
+    inline virtual std::string print();
     inline Circle(const ShapeParam<T>& param);
 };
 
